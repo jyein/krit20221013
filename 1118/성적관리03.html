@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        `use strict`;
+
+        const name = prompt('이름을 입력해 주세요.');
+        const kor = Number(prompt('국어점수를 입력해 주세요.'));
+        const eng = Number(prompt('영어점수를 입력해 주세요.'));
+        const math = Number(prompt('수학점수를 입력해 주세요.'));
+
+        const total = kor + eng + math;
+        const avg = total / 3;
+        console.log(total);
+        console.log(avg);
+
+        // 90점 이상 : A학점
+        // 80점 이상 : B학점
+        // 70점 이상 : C학점
+        // 60점 이상 : D학점
+        // 그 외 : F학점
+
+        document.write(`<h2>${name}</h2>`);
+        document.write(`<p>국어점수 : ${kor}점</p>`);
+        document.write(`<p>영어점수 : ${eng}점</p>`);
+        document.write(`<p>수학점수 : ${math}점</p>`);
+        document.write(`<p>총점 : ${total}</p>`);
+        document.write(`<p>평균 : ${avg}</p>`);
+
+        let grade = "";
+
+        //parseInt() - 문자열을 정수로 바꾸는 함수입니다.
+
+        switch (parseInt(avg / 10)) {
+            case 10:
+                grade += 'A+학점'
+                break;
+            case 9:
+                grade += 'A학점'
+                break;
+            case 8:
+                grade += 'B학점'
+                break;
+            case 7:
+                grade += 'C학점'
+                break;
+            case 6:
+                grade += 'D학점'
+                break;
+            default:
+                grade += 'F학점'
+        }
+        document.write(grade);
+
+
+    </script>
+</body>
+</script>
+</body>
+
+</html>

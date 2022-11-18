@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        `use strict`;
+
+        let menu = prompt('P:Pizza, S:Spaghetii, R:Risotto, D:Drink 메뉴를 선택해주세요')
+
+        switch (menu) {
+            case 'P':
+            case 'p':
+                document.write('Pizza를 주문하셧습니다.')
+                break;
+            case 'R':
+            case 'r':
+                document.write('Risotto를 주문하셧습니다.')
+                break;
+            case 'D':
+            case 'd':
+                document.write('Drink를 주문하셧습니다.')
+                break;
+            default:
+                document.write('없는 메뉴입니다.')
+        }
+        console.log(menu);
+
+    </script>
+</body>
+
+</html>
