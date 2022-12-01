@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제이쿼리(애니메이션 animate)</title>
+    <style>
+        .box {
+            margin-top: 50px;
+            width: 100px;
+            height: 100px;
+            border: 2px solid #000;
+        }
+    </style>
+    <script src="/js/jquery.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            // 첫번째 동작
+            // 편도 방법
+            $('#box1')
+                .stop()
+                .delay(1000)
+                .css({ width: '100px' })
+                .animate({ width: '1000px', fontSize: '50px' }, 5000)
+
+            // 두번째 동작
+            $('#box1')
+                .stop()
+                .delay(1000)
+                .css({ width: '1000px' })
+                .animate({ width: '100px', fontSize: '50px' }, 2000)
+            // 위의 방법은 간단한 방법에서는 상관은 없지만 메모리를 많이 잡아먹는다
+            // 그래서 아래 방법으로 하는게 좋다.
+
+            // 왕복 방법
+            $('#box2')
+                .stop()
+                .delay(2000)
+                .css({ width: '100px' })
+                .animate({ width: '1000px', fontSize: '50px' }, 5000, function () {
+                    $('#box2')
+                        .stop()
+                        .delay(2000)
+                        .css({ width: '1000px' })
+                        .animate({ width: '100px', fontSize: '50px' }, 2000)
+                })
+
+
+            $('#box3')
+                .stop()
+                .delay(3000)
+                .css({ width: '100px' })
+                .animate({ width: '1000px', fontSize: '50px' }, 5000)
+
+        });
+
+    </script>
+</head>
+
+<body>
+
+    <div id="box1" class="box">box1</div>
+    <div id="box2" class="box">box2</div>
+    <div id="box3" class="box">box3</div>
+
+
+</body>
+
+</html>

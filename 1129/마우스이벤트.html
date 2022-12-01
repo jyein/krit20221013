@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="../js/jquery.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            // 대상을 누르는 순간 이벤트가 발생
+
+            // $('p').click(function () {
+            //     alert('텍스트가 선택되었음')
+            // });
+
+
+            // 대상을 누르거나 눌렀다가 뗏을때 각각 이벤트 발생
+            // $('p').mousedown(function () {
+            //     $(this).after("<p style='color:red'>마우스버튼down</p>")
+            // })
+
+            // $('p').mouseup(function () {
+            //     $(this).after("<p style='color:blue'>마우스버튼up</p>")
+            // })
+
+            // 자기자신에게 마우스를 올렷을때와 나갔을때 이벤트가 각각 발생
+            // $('p').hover(
+            //     function () {
+            //         // $('p').css({속성:'속성값','속성':'속성값'}) 제이쿼리로 스타일정응
+            //         $('p').css("background-color", "yellow");
+            //     },
+            //     function () {
+            //         $('p').css("background-color", "pink");
+            //     }
+            // );
+
+            // $('대상1').hover(function () {
+            //     $('p').css({ 속성: '속성값', '속성': '속성값' }) 제이쿼리로 스타일정응
+            //     $('p').css("background-color", "yellow");
+            // },
+            //     function () {
+            //         $('p').css("background-color", "pink");
+            //     }
+            // );
+
+            // $('대상2').hover(function () {
+            //     $('p').css({ 속성: '속성값', '속성': '속성값' }) 제이쿼리로 스타일정응
+            //     $('p').css("background-color", "yellow");
+            // },
+            //     function () {
+            //         $('p').css("background-color", "pink");
+            //     }
+            // );
+
+
+
+
+
+            // 마우스포인터가 대상영역 안에 또는 밖으로 나갈때 각각 이벤트가 발생한다
+            // $('p').mouseenter(function () {
+            //         $('p').css("background-color", "yellow");
+            //     });
+
+            // $('p').mouseleave(function () {
+            //         $('p').css("background-color", "pink");
+            //     }
+            // );
+
+            // 마우스커서가 안에 있느냐 밖에 있느냐에 따라 각각 이벤트가 발생
+
+            // $('div').focusin(function() {
+            //     $(this).css("background-color", "yellow")
+            // });
+
+            // $('div').focusout(function() {
+            //     $(this).css("background-color", "pink")
+            // });
+
+            // 마우스를 움직일때마다 이벤트가 발생
+
+            // $(document).mousemove(function(event) {
+            //     $('span').text(event.pageX + ',' + event.pageY);
+            //     // $('span').html('html형식');
+            // })
+
+        })
+
+    </script>
+</head>
+
+<body>
+    <p><b>여기를 클릭해보세요</b></p>
+
+    <div style="border: 1px solid black; padding:10px">
+        이름 : <input type="text"><br>
+        주소 : <input type="text">
+    </div>
+
+    <p>마우스 좌표는 : <span></span>.</p>
+</body>
+
+</html>
