@@ -1,0 +1,29 @@
+function goPdfLink(type, pdfPath){
+
+    /*
+        앱보안점검
+        GET -> POST 호출
+     */
+    var form = document.createElement("form");
+    form.setAttribute("method", "post");
+    form.setAttribute("action", "/wsvc/kr/api/v2/findshowroom/pdfDownload");
+    form.setAttribute("target", "popup_id");
+
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = "act";
+    input.value = type;
+    form.appendChild(input);
+
+    input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = "pdfPath";
+    input.value = pdfPath;
+    form.appendChild(input);
+
+    document.body.appendChild(form);
+
+    form.submit();
+
+    document.body.removeChild(form);
+}

@@ -1,0 +1,767 @@
+(function (global, factory) {
+    global = global
+    global.g2 = global.g2 || {}
+    global.g2.cpKeyVisualCarouselMk3 = global.g2.cpKeyVisualCarouselMk3 || {}
+    global.g2.cpKeyVisualCarouselMk3.Component = factory()
+})(this, function () {
+    'use strict'
+
+    var Component = (function (isUndefined) {
+        var win = window,
+            $ = win.jQuery,
+            Util = win.G2.util,
+            RESPONSIVE = win.G2.RESPONSIVE,
+            pcmoOneChk = 0
+
+        function Component(container, args) {
+            if (!(this instanceof Component)) {
+                return new Component(container, args)
+            }
+            var defParams = {
+                obj: container,
+                props: {},
+                visualWrap: '.cp-main-hero__wrap',
+                carouselContainer: '.swiper-container',
+                carouselWrapper: '.swiper-wrapper',
+                carouselItem: '.swiper-slide',
+                carouselPage: '.swiper-pagination',
+                carouselPageBullet: '.swiper-pagination-bullet',
+                carouselController: '.swiper-control',
+                carouselTimer: '.swiper-timer',
+                carouselPrev: '.swiper-button-prev button',
+                carouselNext: '.swiper-button-next button',
+                videoObj: null,
+                isAnimate: false,
+                globalText: {},
+                ariaAttr: {
+                    label: 'aria-label',
+                },
+                classAttr: {
+                    loaded: 'is-loaded',
+                },
+                isLoaded: false,
+                isInArea: false,
+                customEvent: '.Component' + new Date().getTime() + Math.random(),
+                viewType: null,
+                scrollStart: null,
+                resizeStart: null,
+                mvScrollBtn: '.cp-main-hero__cta .js-btnScrollMv',
+                appHeight: null
+            }
+            this.opts = Util.def(defParams, args || {})
+            if (!(this.obj = $(this.opts.obj)).length) return
+            this.init()
+        }
+        Component.prototype = {
+            init: function () {
+                this.setElements()
+                this.initOpts()
+                this.initLayout()
+                this.buildItemPanel()
+                this.bindEvents(true)
+                this.setHeight()
+            },
+            setElements: function () {
+                this.visualWrap = this.obj.find(this.opts.visualWrap)
+                this.carouselContainer = this.visualWrap.find(this.opts.carouselContainer)
+                this.carouselWrapper = this.carouselContainer.find(this.opts.carouselWrapper)
+                this.carouselItem = this.carouselWrapper.find(this.opts.carouselItem)
+                this.carouselPage = this.visualWrap.find(this.opts.carouselPage)
+                this.carouselPrev = this.visualWrap.find(this.opts.carouselPrev)
+                this.carouselNext = this.visualWrap.find(this.opts.carouselNext)
+                this.carouselController = this.visualWrap.find(this.opts.carouselController)
+                this.carouselTimer = this.visualWrap.find(this.opts.carouselTimer)
+                this.mvScrollBtn = this.obj.find(this.opts.mvScrollBtn)
+                this.videoObj = this.obj.find('.swiper-wrapper')
+            },
+            initOpts: function () {
+                // globalText
+                var globalText = this.obj.data('global-text')
+                if (globalText !== isUndefined) {
+                    for (var gKey in globalText) {
+                        var gText = $.trim(globalText[gKey])
+                        this.opts.globalText[gKey] = gText.length ? gText : gKey
+                    }
+                }
+            },
+            initLayout: function () {
+                var _this = this
+                this.carouselPage.addClass(this.opts.carouselPageBullet.split('.')[1] + 's')
+                this.carouselPageBullet = this.carouselPage.find(this.opts.carouselPageBullet)
+                this.carouselPrev.attr(this.opts.ariaAttr.label, 'Previous slide')
+                this.carouselNext.attr(this.opts.ariaAttr.label, 'Next slide')
+            },
+            changeEvents: function (event) {
+                var events = [],
+                    eventNames = event.split(' ')
+                for (var key in eventNames) {
+                    events.push(eventNames[key] + this.opts.customEvent)
+                }
+                return events.join(' ')
+            },
+            bindEvents: function (type) {
+                if (type) {
+                    $(win).on(this.changeEvents('scroll'), $.proxy(this.scrollFunc, this))
+                    $(win).on(this.changeEvents('resize orientationchange'), $.proxy(this.resizeFunc, this))
+                } else {
+                    $(win).off(this.changeEvents('scroll'))
+                    $(win).off(this.changeEvents('resize orientationchange'))
+                }
+                this.mvScrollBtn.on(this.changeEvents('click'), $.proxy(this.mvScrollBtnClick, this))
+            },
+            mvScrollBtnClick: function (e) {
+                e.preventDefault()
+                Util.scrollMoveFunc(
+                    this.mvScrollBtn,
+                    $.proxy(function () {
+                        // objNext.remove();
+                    }, this)
+                )
+            },
+            setOpts: function () {
+                var offset = this.obj.offset(),
+                    height = this.obj.outerHeight(true)
+                this.opts.props['offset'] = offset.top
+                this.opts.props['minOffset'] = Math.ceil(offset.top - Util.winSize().h, 10)
+                this.opts.props['maxOffset'] = Math.ceil(offset.top + height, 10)
+            },
+            loadHeight: function () {
+                if (this.opts.isLoaded) return
+                this.obj.addClass(this.opts.classAttr.loaded)
+                this.opts.isLoaded = true
+            },
+            //일반적인 Swiper에서의 Genesis Key Visual 이미지 및 비디오 PC - Mobile display 문제에 대한 수정
+            pictureVideoSet: function () {
+                var srcSet = "";
+                var newThisActive = this;
+                if (Util.winSize().w < RESPONSIVE.MOBILE.WIDTH) { // MO : 768 ↓
+                    slideImgVideo("mo")
+                    // if window's width is desktop setting
+                } else { // PC : 768 ↑
+                    slideImgVideo("pc");
+                };
+
+                function slideImgVideo(sizeChk) {
+                    newThisActive.carouselItem.each(function (index, item) {
+                        var $videoCont = $(item).find('.video-container'),
+                            $videoOn = "",
+                            $imgNum1 = $(item).find('.js-img-bg:nth-of-type(1)'),
+                            $imgNum2 = $(item).find('.js-img-bg:nth-of-type(2)'),
+                            _activeClass = "is-active";
+                        if (sizeChk == "pc") { //PC
+                            if ($(item).hasClass("swiper-slide-active")) { // 현재 active 된 슬라이드
+                                if ($(item).find('.swiper-slide-media__img').length) { // img
+                                    if ($(item).find('.js-img-bg:nth-of-type(1)[data-srcset]').length) {
+                                        srcSet = $imgNum1.data('srcset');
+                                    } else {
+                                        srcSet = $imgNum1.css('background-image').replace('url(', '').replace(')', '').replace(/\"/gi, "");
+                                    };
+                                    $imgNum1.addClass('is-active').css({ 'display': 'block', 'background-image': 'url(' + srcSet + ')' });
+                                    $imgNum2.removeClass('is-active').css('display', 'none');
+                                } else if ($(item).find('.swiper-slide-media__video').length) { // video
+                                    if (pcmoOneChk > 0) {  // 한번만 동작 : MO 영상정지 시키도록
+                                        pcmoOneChk = -1;
+                                        newThisActive.videoPause(); // 현재 is-active 된 Mo 영상 멈춤.
+                                        $videoOn = $videoCont.eq(0);
+                                        $videoOn.addClass(_activeClass).show().siblings().removeClass(_activeClass).hide();// Pc is-active로 바꿔준다
+                                        newThisActive.videoPlay($(item), "else"); // is-active된 PC 해당영역 재시작
+                                    }
+                                };
+                            }
+                        } else {// MO
+                            if ($(item).hasClass("swiper-slide-active")) { // 현재 active 된 슬라이드
+                                if ($(item).find('.swiper-slide-media__img').length) { // img
+                                    if ($(item).find('.js-img-bg:nth-of-type(2)[data-srcset]').length) {
+                                        srcSet = $imgNum2.data('srcset');
+                                    } else {
+                                        srcSet = $imgNum2.css('background-image').replace('url(', '').replace(')', '').replace(/\"/gi, "");
+                                    };
+                                    $imgNum1.removeClass('is-active').css('display', 'none');
+                                    $(item).find('.js-img-bg:nth-of-type(2)').addClass('is-active').css({ 'display': 'block', 'background-image': 'url(' + srcSet + ')' });
+                                } else if ($(item).find('.swiper-slide-media__video').length) { // video
+                                    if (pcmoOneChk <= 0) {  // 한번만 동작 : PC 영상 정지 시키도록
+                                        pcmoOneChk = 1;
+                                        newThisActive.videoPause(); // 현재 is-active 된 PC 영상 멈춤.
+                                        $videoOn = $videoCont.eq(1);
+                                        $videoOn.addClass(_activeClass).show().siblings().removeClass(_activeClass).hide(); // Mo is-active로 바꿔준다
+                                        newThisActive.videoPlay($(item), "else"); // is-active된 MO 해당영역 재시작
+                                    }
+                                };
+                            }
+                        }
+                    });
+                }
+            },
+            videoPlay: function (_eventElement, _loadState) {
+                var $allVideo = this.visualWrap.find('video');
+                for (var _videoSize = 0; _videoSize > $allVideo.length; _videoSize++) {
+                    this.visualWrap.find('video')[_videoSize].pause();
+                }
+                try {
+                    _eventElement.find('.is-active video').trigger('play');
+                    _eventElement.find('.js-picture-video').removeClass('is-pause').addClass('is-play');
+                } catch (err) {
+                    console.log(err)
+                    _eventElement.find('.is-active video').trigger('pause');
+                    _eventElement.find('.js-picture-video').removeClass('is-play').addClass('is-pause');
+                }
+                this.videoPlayStopBtn(_eventElement);
+            },
+            videoPause: function () {
+                var $slideActive = this.carouselWrapper.find('.swiper-slide-active'),
+                    $videoActive = $slideActive.find('.video-container.is-active'),
+                    videoObj = $videoActive.find('video');
+                if (videoObj.length) {
+                    var _thisTime = videoObj[0].currentTime;
+                    try{
+                        videoObj[0].currentTime = 0;
+                    }catch(err){
+                        if (_thisTime > 0) {
+                            videoObj[0].currentTime = 0;
+                        }
+                    }
+                }
+                this.visualWrap.find('.js-picture-video').removeClass('is-play').addClass('is-pause');
+                this.visualWrap.find('.js-picture-video video').trigger('pause');
+            },
+            videoPlayStopBtn: function (ele, videoChk) {
+                if (videoChk == "play") {
+                    ele.find('.video-button-play').css({ "display": "none", "opacity": "0" });
+                    ele.find('.video-button-pause').css({ "display": "block", "opacity": "1" });
+                } else {
+                    ele.find('.video-button-play').css({ "display": "none", "opacity": "0" });
+                    ele.find('.video-button-pause').css({ "display": "block", "opacity": "1" });
+                }
+            },
+            videoLoad: function (_eventElement, _loadState) {
+                // 초기 영상 로딩 : 검정 화면 개선
+                var video = this.visualWrap.find('.js-picture-video video');
+
+                video.trigger('play'); 
+                video.trigger('pause');
+                video.removeClass('is-play').addClass('is-pause');
+                if (_loadState == 'else') {
+                    video.trigger('load');
+                };
+            },
+            resizeFunc: function () {
+                this.winWidth = $(window).width();
+                if (this.winWidth <= 320) {
+                    this.carouselContainer.css('width', 320);
+                } else {
+                    this.carouselContainer.css('width', this.winWidth);
+                };
+                this.pictureVideoSet();
+                this.setHeight();
+            },
+            buildItemPanel: function () {
+                Util.def(this, {
+                    itempanel: {
+                        instance: [],
+                        isLoaded: false,
+                        activeIndex: null,
+                        autoHeight: $.proxy(function (index, type) {
+                            if (this.itempanel.instance[index] == isUndefined) return
+                            if (type === 'set') {
+                                var target = this.itempanel.instance[index].obj.find('.slide-inner')
+                                TweenLite.set(this.carouselWrapper, {
+                                    height: target.outerHeight(),
+                                })
+                            } else {
+                                var duration = 250 / 1000
+                                var target = this.itempanel.instance[index].obj.find('.slide-inner')
+                                if (!this.itempanel.isLoaded) {
+                                    duration = 0
+                                    this.itempanel.isLoaded = true
+                                }
+                                TweenLite.to(this.carouselWrapper, duration, {
+                                    height: target.outerHeight(),
+                                    onComplete: $.proxy(function () {
+                                        this.carouselWrapper.css('height', '')
+                                    }, this),
+                                })
+                            }
+                        }, this),
+                        build: $.proxy(function () {
+                            var slideIndex = 0,
+                                slideContainer = '',
+                                keyVisualComponent = this //g2.cpKeyVisualCarouselMk3.Component.prototype
+
+                            //this.winWidth = Util.winSize().w;
+                            this.winWidth = $(window).width()
+                            this.carouselContainer.css({ width: this.winWidth })
+                            this.loadHeight()
+
+                            var $visualWrap = keyVisualComponent.visualWrap,
+                                $swiperContainer = $visualWrap.find('.swiper-container'),
+                                $swiperItem = $visualWrap.find('.swiper-slide')
+
+                            var creative = 'creative';
+                            if (navigator.userAgent.match(/Trident\/7\./)) {
+                                creative = 'slide';
+                            };
+                            if (window.NodeList && !NodeList.prototype.forEach) {
+                                NodeList.prototype.forEach = Array.prototype.forEach;
+                            }
+                            
+                            // ⏬ start of swiper generate
+                            var keyVisualSlider = new Swiper($swiperContainer, {
+                                grabCursor: true,
+                                effect: creative,
+                                loop: true,
+                                creativeEffect: {
+                                    prev: {
+                                        translate: ["-100%", 0, 0]
+                                    },
+                                    next: {
+                                        translate: ["50%", 0, -1]
+                                    },
+                                },
+                                speed: 500,
+                                autoplay: {
+                                    delay: 5000,
+                                    disableOnInteraction: true,
+                                },
+                                pagination: {
+                                    el: '.swiper-pagination',
+                                    clickable: true,
+                                    renderBullet: function (index, className) {
+                                        return '<button class="swiper-pagination-bullet" data-bullet-index="' + index + '"><span class="ico-bullet"><span class="blind">slide' + (index + 1) + '</span></span></button>'
+                                    },
+                                },
+                                navigation: {
+                                    nextEl: '.swiper-button-next',
+                                    prevEl: '.swiper-button-prev',
+                                },
+                                keyboard: {
+                                    enabled: true
+                                },
+                                noSwiping: false,
+                                updateOnWindowResize: true,
+                                observer: true,
+                                observerParents: true,
+                                observerSlideChildren: true,
+                                on: {
+                                    init: function () {
+                                        var $current = $visualWrap.find('.swiper-slide-active');
+
+                                        $visualWrap.find('.btn-controls').removeClass('is-play').addClass('is-pause');
+                                        $visualWrap.find('.btn-controls .blind').text('Pause');
+                                        // 슬라이드에 동영상이 1개 이상 있을 시 동작
+                                        if ($visualWrap.find('.swiper-slide .js-picture-video').length) {
+                                            keyVisualComponent.videoLoad($current,"init");
+                                            keyVisualComponent.pictureVideoSet();
+                                            // 슬라이드 생성 시 첫 슬라이드가 동영상일 경우 동작
+                                            if ($visualWrap.find('.swiper-slide-active .js-picture-video').length) {
+                                                slideIndex = $visualWrap.find('.swiper-slide-active').data("swiper-slide-index");
+                                                slideContainer = $visualWrap.find('.swiper-wrapper [data-swiper-slide-index="' + slideIndex + '"]');
+                                                keyVisualComponent.videoPlay(slideContainer, "init");
+                                            };
+                                        };
+                                        focusSetting($current)
+
+                                        // 👇 only-main-hero
+                                        initText(this);
+                                    },
+                                    slideChange: function () {
+                                        var $current = $visualWrap.find('.swiper-slide-active');
+                                        // 슬라이드에 동영상이 1개 이상 있을 시 동작
+                                        if ($visualWrap.find('.swiper-slide .js-picture-video').length) {
+                                            keyVisualComponent.videoPause();
+                                        };
+                                        focusSetting($current)
+                                        // 👇 only-main-hero
+                                        moveText(this);
+                                    },
+                                    transitionEnd: function () {
+                                        // 슬라이드에 동영상이 1개 이상 있을 시 동작
+                                        if ($visualWrap.find('.swiper-slide .js-picture-video').length) {
+                                            // 현재 보여지는 슬라이드가 동영상일 경우 동작
+                                            if ($visualWrap.find('.swiper-slide-active .js-picture-video').length) {
+                                                slideIndex = $visualWrap.find('.swiper-slide-active').data("swiper-slide-index");
+                                                slideContainer = $visualWrap.find(".swiper-wrapper").find('[data-swiper-slide-index="' + slideIndex + '"]');
+                                                keyVisualComponent.videoPlay(slideContainer, "else");
+                                                // 현재 보여지는 슬라이드가 동영상이 아닐 경우 동작
+                                            } else {
+                                                // keyVisualComponent.videoLoad("else");
+                                            };
+                                        };
+                                        // 👇 only-main-hero
+                                        updateText(this);
+                                    },
+                                }
+                            });
+                            // ⏫ end of swiper generate
+
+                            function initText (swiper) {
+                                var prev = 'prev';
+                                var active = 'active';
+                                var next = 'next';
+                                var texts = [prev, active, next];
+                                var ctaNodes = document.createElement('div');
+
+                                texts.forEach(function(obj) {
+                                    var elem = document.createElement('div');
+
+                                    elem.classList.add('text-nodes')
+                                    elem.classList.add('text-nodes-' + obj);
+                                    swiper.el.appendChild(elem);
+                                });
+                                ctaNodes.classList.add('cta-nodes');
+                                swiper.el.appendChild(ctaNodes);
+                                swiper.el.querySelectorAll('.swiper-slide-text').forEach(function(elem) {
+                                    elem.classList.add('ir');
+                                });
+                                swiper.el.querySelectorAll('.swiper-slide-cta').forEach(function(elem) {
+                                    elem.classList.add('ir');
+                                });
+
+                                updateText(swiper)
+                            };
+
+                            function moveText (swiper) {
+                                var activeTextNodes = swiper.el.querySelector('.text-nodes-active');
+                                var prevTextNodes = swiper.el.querySelector('.text-nodes-prev');
+                                var nextTextNodes = swiper.el.querySelector('.text-nodes-next');
+
+                                if (activeTextNodes) {
+                                    activeTextNodes.classList.add('text-nodes-active-moves');
+                                };
+                                if (swiper.previousIndex > swiper.activeIndex) {
+                                    if (prevTextNodes) {
+                                        prevTextNodes.classList.add('text-nodes-prev-moves');
+                                    };
+                                } else {
+                                    if (nextTextNodes) {
+                                        nextTextNodes.classList.add('text-nodes-next-moves');
+                                    };
+                                };
+                            };
+
+                            function updateText (swiper) {
+                                var prev = 'prev';
+                                var active = 'active';
+                                var next = 'next';
+                                var texts = [prev, active, next];
+
+                                texts.forEach(function(obj) {
+                                    var _node = swiper.el.querySelector('.text-nodes-' + obj);
+
+                                    if (_node) {
+                                        _node.classList.remove('text-nodes-' + obj + '-moves');
+                                        _node.innerHTML = swiper.el.querySelector('.swiper-slide-' + obj + ' .swiper-slide-text').innerHTML;
+                                    }
+                                });
+
+                                var ctaNodes = swiper.el.querySelector('.cta-nodes');
+                                
+                                if (ctaNodes) {
+                                    ctaNodes.innerHTML = swiper.el.querySelector('.swiper-slide-active .swiper-slide-cta').innerHTML;
+                                }
+                            };
+
+                            function focusSetting(activeSlider){ // 현재 슬라이드 a, button 포커스 tabindex 활성, 그 외 포커스 영향 x
+                                var $notActive = $(activeSlider).siblings('.swiper-slide');
+                                // a, 버튼 tabIndex
+                                $(activeSlider).find('a, button').removeAttr("tabIndex");
+                                $notActive.find('a, button').attr("tabIndex","-1");
+                            };
+                            $visualWrap.find('.btn-controls').on('click', function () {
+                                //slide autoplay
+                                if ($(this).hasClass('is-play')) {
+                                    keyVisualSlider.autoplay.start();
+                                    $(this).find('.blind').text('Pause');
+                                    $(this).removeClass('is-play').addClass('is-pause');
+                                    //slide stop
+                                } else if ($(this).hasClass('is-pause')) {
+                                    keyVisualSlider.autoplay.stop();
+                                    $(this).find('.blind').text('Play');
+                                    $(this).removeClass('is-pause').addClass('is-play');
+                                };
+                            });
+
+                        }, this),
+                    },
+                })
+                this.itempanel.build()
+            },
+            setHeight: function () {
+                var winHeight = window.innerHeight;
+
+                if (this.opts.appHeight === null || this.opts.appHeight !== winHeight) {
+                    var doc = document.documentElement;
+
+                    this.opts.appHeight = winHeight;
+                    doc.style.setProperty('--app-height', winHeight + 'px');
+                }
+            },
+            reInit: function (e) {
+                // Global Callback
+            },
+        }
+        return Component
+    })()
+    return Component
+})
+
+;(function (global, factory) {
+    $(function () {
+        factory()
+    })
+})(this, function () {
+    'use strict'
+
+    var Component = (function (isUndefined) {
+        var win = window,
+            $ = win.jQuery,
+            Util = win.G2.util
+        function Component(args) {
+            var defParams = {
+                obj: '.cp-main-hero',
+            }
+            this.opts = Util.def(defParams, args || {})
+            if (!(this.obj = $(this.opts.obj)).length) return
+            this.init()
+        }
+        Component.prototype = {
+            init: function () {
+                this.callComponent()
+            },
+            callComponent: function () {
+                for (var i = 0, max = this.obj.length; i < max; i++) {
+                    new win.g2.cpKeyVisualCarouselMk3.Component(this.obj.eq(i))
+                }
+            },
+        }
+        return new Component()
+    })()
+    return Component
+})
+
+;(function (global, factory) {
+    global = global
+    global.g2 = global.g2 || {}
+    global.g2.renualVideoController = global.g2.renualVideoController || {}
+    global.g2.renualVideoController.Component = factory()
+})(this, function () {
+    'use strict'
+
+    var Component = (function (isUndefined) {
+        var win = window,
+            $ = win.jQuery,
+            Util = win.G2.util,
+            RESPONSIVE = win.G2.RESPONSIVE
+        function Component(container, args) {
+            if (!(this instanceof Component)) {
+                return new Component(container, args)
+            }
+            var defParams = {
+                obj: container,
+                props: {},
+                videoType: 'html5',
+                videoOpts: null,
+                btnPlay: '.video-button-play',
+                btnPause: '.video-button-pause',
+                btnMuteOn: '.video-muted-on',
+                btnMuteOff: '.video-muted-off',
+                customEvent: '.HiveVideo' + new Date().getTime() + Math.random(),
+                isLoaded: false,
+                isPlaying: false,
+                isMuted: false,
+                isLoop: false,
+                progressNum: null,
+                duration: 250,
+                hasYtReady: false,
+                yTReadyToPlay: false,
+                on: {
+                    progress: null,
+                    loaded: null,
+                    ended: null,
+                },
+            }
+            this.opts = Util.def(defParams, args || {})
+            if (!(this.obj = $(this.opts.obj)).length) return
+            this.init()
+        }
+        Component.prototype = {
+            init: function () {
+                this.setElements()
+                this.bindCallbackEvents()
+                this.bindEvents()
+                this.bindEvents(true)
+            },
+            setElements: function () {
+                this.btnPlay = this.obj.find(this.opts.btnPlay)
+                this.btnPause = this.obj.find(this.opts.btnPause)
+                this.btnMuteOn = this.obj.find(this.opts.btnMuteOn)
+                this.btnMuteOff = this.obj.find(this.opts.btnMuteOff)
+                this.videoObj = this.obj // .swiper-slide-media__video
+            },
+            changeEvents: function (event) {
+                var events = [],
+                    eventNames = event.split(' ')
+                for (var key in eventNames) {
+                    events.push(eventNames[key] + this.opts.customEvent)
+                }
+                return events.join(' ')
+            },
+            bindEvents: function (type) {
+                this.btnPlay.on(this.changeEvents('click'), 'button', $.proxy(this.btnPlayClick, this))
+                this.btnPause.on(this.changeEvents('click'), 'button', $.proxy(this.btnPauseClick, this))
+                this.btnMuteOn.on(this.changeEvents('click'), 'button', $.proxy(this.btnMuteOnClick, this))
+                this.btnMuteOff.on(this.changeEvents('click'), 'button', $.proxy(this.btnMuteOffClick, this))
+            },
+            btnPlayClick: function (e) {
+                e.preventDefault()
+                this.play()
+            },
+            btnPauseClick: function (e) {
+                e.preventDefault()
+                this.pause()
+            },
+            btnMuteOnClick: function (e) {
+                e.preventDefault()
+                this.mutedOn()
+            },
+            btnMuteOffClick: function (e) {
+                e.preventDefault()
+                this.mutedOff()
+            },
+            controlBtn: function () {
+                var duration = this.opts.duration / 1000
+                if (this.opts.isPlaying) {
+                    this.obj.removeClass('is-pause')
+                    this.obj.addClass('is-play')
+                } else {
+                    this.obj.removeClass('is-play')
+                    this.obj.addClass('is-pause')
+                }
+            },
+            play: function () {
+                var $isActive = this.videoObj.find('.is-active')
+                var videoThis = $isActive.find('video')[0]
+                videoThis.play()
+                this.btnPlay = $isActive.find('.video-button-play')[0]
+                this.btnPause = $isActive.find('.video-button-pause')[0]
+                this.opts.isPlaying = true
+                this.obj.removeClass('is-ended')
+                TweenLite.to(this.btnPlay, this.opts.duration / 1000, {
+                    opacity: 0,
+                    display: 'none',
+                })
+                TweenLite.to(this.btnPause, this.opts.duration / 1000, {
+                    opacity: 1,
+                    display: 'block',
+                })
+            },
+            pause: function () {
+                var $isActive = this.videoObj.find('.is-active')
+                var videoThis = $isActive.find('video')[0]
+                videoThis.pause()
+                this.btnPlay = $isActive.find('.video-button-play')[0]
+                this.btnPause = $isActive.find('.video-button-pause')[0]
+                this.opts.isPlaying = false
+                Util.cancelAFrame.call(win, this.stepRequestFrame)
+                TweenLite.to(this.btnPlay, this.opts.duration / 1000, {
+                    opacity: 1,
+                    display: 'block',
+                })
+                TweenLite.to(this.btnPause, this.opts.duration / 1000, {
+                    opacity: 0,
+                    display: 'none',
+                })
+            },
+            mutedOff: function () {
+                var duration = this.opts.duration / 1000
+                var $isActive = this.videoObj.find('.is-active')
+                var videoThis = $isActive.find('video')[0]
+                videoThis.muted = false
+                this.btnMuteOn = $isActive.find('.video-muted-on')[0]
+                this.btnMuteOff = $isActive.find('.video-muted-off')[0]
+                TweenLite.to(this.btnMuteOn, duration, {
+                    opacity: 1,
+                    display: 'block',
+                })
+                TweenLite.to(this.btnMuteOff, duration, {
+                    opacity: 0,
+                    display: 'none',
+                })
+            },
+            mutedOn: function () {
+                var duration = this.opts.duration / 1000
+                var $isActive = this.videoObj.find('.is-active')
+                var videoThis = $isActive.find('video')[0]
+                videoThis.muted = true
+                this.btnMuteOn = $isActive.find('.video-muted-on')[0]
+                this.btnMuteOff = $isActive.find('.video-muted-off')[0]
+                TweenLite.to(this.btnMuteOn, duration, {
+                    opacity: 0,
+                    display: 'none',
+                })
+                TweenLite.to(this.btnMuteOff, duration, {
+                    opacity: 1,
+                    display: 'block',
+                })
+            },
+            bindCallbackEvents: function () {
+                this.obj.on('hiveVideoPlay', $.proxy(this.hiveVideoPlay, this))
+                this.obj.on('hiveVideoPause', $.proxy(this.hiveVideoPause, this))
+                this.obj.on('hiveVideoSetTime', $.proxy(this.hiveVideoSetTime, this))
+            },
+        }
+        return Component
+    })()
+    return Component
+})
+
+;(function (global, factory) {
+    $(function () {
+        factory()
+    })
+})(this, function () {
+    'use strict'
+
+    var Component = (function (isUndefined) {
+        var win = window,
+            $ = win.jQuery,
+            Util = win.G2.util
+        function Component(args) {
+            var defParams = {
+                obj: '.swiper-slide-media__video',
+            }
+            this.opts = Util.def(defParams, args || {})
+            if (!(this.obj = $(this.opts.obj)).length) return
+            this.init()
+        }
+        Component.prototype = {
+            init: function () {
+                this.callComponent()
+            },
+            callComponent: function () {
+                for (var i = 0, max = this.obj.length; i < max; i++) {
+                    new win.g2.renualVideoController.Component(this.obj.eq(i))
+                }
+            },
+        }
+        return new Component()
+    })()
+    return Component
+})
+
+$(function(){  
+    $('.main-visual__cta a').on('click', function(e){
+        var hrefParam = $(this).attr('href');
+        
+        if(hrefParam.startsWith("#")){
+            e.preventDefault();
+            $(this).attr('data-page-anchor','');
+            $(hrefParam).click();
+        }
+	});
+
+});
+
+
+
+
+

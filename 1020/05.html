@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .txt1 {
+            font-size: 20px;
+            /* line-height: 30px; */
+            /* line-height: 125%; */
+            /* 100%는 지정된 글자크기*/
+            line-height: 2; /*120%*/
+        }
+
+        .txt1-1{
+            text-decoration: underline;
+            text-decoration-color: rebeccapurple;
+            text-decoration-style: dotted;
+        }
+
+        .txt1-2{
+            text-decoration: overline;
+            text-decoration-color: rebeccapurple;
+            text-decoration-style: double;
+        }
+
+        .txt1-3{
+            text-decoration: line-through;
+            text-decoration-color : rebeccapurple;
+            text-decoration-style : dashed;
+        }
+
+        .txt2{
+            /* text-indent: -100px; */
+            text-indent: 50%;
+        }
+
+        .txt3{
+            width: 500px;
+            height: 200px;
+            background-color: yellowgreen;
+            text-align: center;
+            /* line-height: 200px; 세로정렬 */
+        }
+
+        .txt4{
+            /* letter-spacing: 30px; 한자 한자씩의 간격*/
+            /* letter-spacing: 1em;  */
+            /* 글자는 %가 적용이 안됨 1em 현재 body의 글자크기 16px의 100% */
+            word-spacing: 30px;
+            /* 단어 하나씩의 간격 */
+        }
+
+        .btn{
+            text-decoration: none;
+        }
+
+        .front01{
+            text-transform: capitalize;
+        }
+        .front02{
+            text-transform: lowercase;
+        }
+        .front03{
+            text-transform: uppercase;
+        }
+        .front04{
+            text-transform: none;
+        }
+
+    </style>
+</head>
+<body style="height: 5000px;">
+    <p class="txt1">
+        <span class="txt1-1">문단태그입니다.</span><br>
+        <span class="txt1-2">문단태그입니다.</span><br>
+        <span class="txt1-3">문단태그입니다.</span><br>
+        문단태그입니다.<br>
+        문단태그입니다.<br>
+        문단태그입니다.<br>
+    </p>
+    <p class="txt2">들여쓰기 문단태그입니다.</p>
+    <p class="txt3">글자의 가로정렬</p>
+    <p class="txt4">단어와 단어사이 간격 또는 한자 한자의 간격</p>
+    <p><a href="#" class="btn">네이버로 가기</a> </p>
+
+    <br><br><br>
+
+    <p class="front01">frontend</p>
+    <p class="front02">frontend</p>
+    <p class="front03">frontend</p>
+    <p class="front04">frontend</p>
+
+
+
+
+</body>
+</html>
